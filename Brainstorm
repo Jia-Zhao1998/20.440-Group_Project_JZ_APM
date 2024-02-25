@@ -1,0 +1,7 @@
+echo "# 20.440-Group_Project_JZ_APM" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/Jia-Zhao1998/20.440-Group_Project_JZ_APM.git
+git push -u origin main
