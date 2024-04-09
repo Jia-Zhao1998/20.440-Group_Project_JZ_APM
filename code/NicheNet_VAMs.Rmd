@@ -87,7 +87,7 @@ if(organism == "human"){
 
 }
 
-lr_network = lr_network %>% distinct(from, to)
+lr_network = lr_network %>% distinct(from, to) # ligand in "from"; receptor in "to"
 ligand_target_matrix[1:5,1:5] # target genes in rows, ligands in columns
 
 ```
@@ -98,11 +98,12 @@ ligand_target_matrix[1:5,1:5] # target genes in rows, ligands in columns
 
 **Hypothesis**: VAMs-ligands regulate the expression of adipocytes-maturation genes
 
-**Import our RNA-seq dataset containing TRM subset named VAM1 (Vasculature Associated Macrophages 1) and adipocytes for WT and c-Maf deletion**
+**Import our RNA-seq dataset containing TRM subset named VAM1 (Vasculature Associated Macrophages 1) and adipocytes for WT and VAMs' c-Maf deletion background**
 
 ```{r}
 # Need to adjust to your download file! Named: Silva_WAT_cMAF_vs_WT.csv
-# Since I download
+# Since I have downloaded from github repo: https://github.com/Jia-Zhao1998/20.440-Group_Project_JZ_APM/blob/main/data/Silva_WAT_cMAF_vs_WT.csv
+
 cMaf_data <- read_csv('~/Downloads/Silva_WAT_cMAF_vs_WT.csv')
 head(cMaf_data)
 ```
@@ -110,8 +111,14 @@ head(cMaf_data)
 ```{r}
 # Because the NicheNet 2.0. networks are in the most recent version of the official gene symbols, we will make sure that the gene symbols used in the expression data are also updated (= converted from their “aliases” to official gene symbols).
 
-gene_name <- cMaf_data$gene
+gene_name <- cMaf_data$gene %>% unique()
 gene_name_symbol <- convert_alias_to_symbols(gene_name, "mouse", verbose = FALSE) %>% unique()
+
+# > length(gene_name)
+# [1] 48395
+# > length(gene_name_symbol)
+# [1] 48315
+# 80 genes less
 ```
 
 # Step 1: Define expressed genes in sender and receiver cell populations
@@ -119,7 +126,7 @@ gene_name_symbol <- convert_alias_to_symbols(gene_name, "mouse", verbose = FALSE
 Question: which ligands expressed by VAMs can induce adipocyte maturation from preadipocytes?
 
 ```{r}
-# Make a function to extract expressuion data from our RNA-seq data set based on cell types
+# Make a function to extract expression data from the RNA-seq data set based on cell types
 
 extract_expression <- function(data, pattern, cutoff = 100) {
   # Identify columns matching the pattern: e.g. "VAM1-WT", "Adipocyte-WT"
@@ -148,9 +155,24 @@ extract_expression <- function(data, pattern, cutoff = 100) {
 ## Sender cells: VAMs
 
 ```{r}
+# Filter VAMs expression
 VAMs_expression_df <- extract_expression(data = cMaf_data, pattern = "VAM1-WT", cutoff = 100)
 
 expressed_genes_sender <-VAMs_expression_df
+
+# number of rows for VAMs_expression_df
+# [1] 9560
+
+# > expressed_genes_sender[which(expressed_genes_sender$gene == "Ccl8"),]
+# # A tibble: 1 × 5
+#   gene  `VAM1-WT-1` `VAM1-WT-2` `VAM1-WT-7` average
+#   <chr>       <dbl>       <dbl>       <dbl>   <dbl>
+# 1 Ccl8        1144.       1851.       1209.   1401.
+# > expressed_genes_sender[which(expressed_genes_sender$gene == "Ccl2"),]
+# # A tibble: 1 × 5
+#   gene  `VAM1-WT-1` `VAM1-WT-2` `VAM1-WT-7` average
+#   <chr>       <dbl>       <dbl>       <dbl>   <dbl>
+# 1 Ccl2        2535.       4320.       4259.   3705.
 ```
 
 ## Receiver cells: Adipocytes/FRCs
@@ -161,13 +183,13 @@ expressed_genes_sender <-VAMs_expression_df
 # Adipocytes
 Adipocyte_expression_df <- extract_expression(data = cMaf_data, pattern = "Adipocyte-WT", cutoff = 100)
 # number of rows of the filtered data
-# [1] 9905
+# [1] 9903
 
 
 # FRCs
 FRC_expression_df <- extract_expression(data = cMaf_data, pattern = "FRC-WT", cutoff = 100)
 # number of rows of the filtered data
-# [1] 9903
+# [1] 9902
 
 expressed_genes_receiver_adipocyte <- Adipocyte_expression_df
 expressed_genes_receiver_FRC <- FRC_expression_df
@@ -401,46 +423,152 @@ Heatmap(log2(normalized_counts[top_genes, ] + 1),
 # dev.off()
 ```
 
-------------------------------------------------------------------------
-
-# HERE ABOVE ARE FOR PSET6. NO NEED TO LOOD DOWN
+**Define a gene set of interest: genes might be involved in adipocyte maturation**
 
 ```{r}
-geneset_oi = readr::read_tsv(url("https://zenodo.org/record/3260758/files/pemt_signature.txt"), col_names = "gene")%>% pull(gene) %>% .[. %in% rownames(ligand_target_matrix)] # only consider genes also present in the NicheNet model - this excludes genes from the gene list for which the official HGNC symbol was not used by Puram et al.
-
+# I select all 1663 genes that are differentially expressed 
+gene_indicator = significant_genes$gene %in% rownames(ligand_target_matrix) # make sure the gene name is consistent with that used in NicheNet matrix
+geneset_oi_df <- significant_genes[gene_indicator, ]
+geneset_oi <- geneset_oi_df$gene
 head(geneset_oi)
-## [1] "SERPINE1" "TGFBI"    "MMP10"    "LAMC2"    "P4HA2"    "PDPN"
 
-background_expressed_genes = expressed_genes_receiver %>% .[. %in% rownames(ligand_target_matrix)]
+# [1] "Cidec"  "Thrsp"  "Scd1"   "Adipoq" "Pck1"   "Pnpla2"
+
+# Define a background gene set are not involved in adipocyte maturation
+# Remove the gene set of interest (geneset_oi) from FRC expression genes
+background_expressed_genes <- expressed_genes_receiver_FRC$gene %>%
+  intersect(rownames(ligand_target_matrix)) %>% 
+  setdiff(geneset_oi)
+
 head(background_expressed_genes)
-## [1] "RPS11"   "ELMO2"   "PNMA1"   "MMP2"    "TMEM216" "ERCC5"
+## [1] "Malat1" "Sptbn1" "Ahnak"  "B2m"    "Actb"   "Nedd4" 
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Convert rownames to a column, assuming rownames are the gene names
+significant_genes <- significant_genes %>%
+  rownames_to_column(var = "gene")
+
+# Calculate the absolute log2FoldChange to help with sorting
+significant_genes$abs_log2FoldChange <- abs(significant_genes$log2FoldChange)
+
+
+# Define the function to select top genes of interest based on
+# data: the data contains a data frame of differentially expressed genes predefined: significant_genes
+# baseMean_threshold, default is 500
+# n = number of top genes
+# the ligand-receptor matrix from NicheNet: matrix = ligand_target_matrix
+
+get_top_genes <- function(data = significant_genes, baseMean_threshold = 500, n = 20, matrix = ligand_target_matrix) {
+  # Ensure gene names from data are present in the ligand_target_matrix rownames
+  filtered_genes <- data[data$gene %in% rownames(matrix), ]
+  
+  # Filtering and selecting top genes
+  top_genes <- filtered_genes %>%
+    filter(baseMean > baseMean_threshold) %>% # filter out low expression genes
+    arrange(desc(abs_log2FoldChange)) %>%  # Rank genes based on magnitute of log2FoldChnage
+    group_by(sign = sign(log2FoldChange)) %>%
+    slice_max(order_by = abs_log2FoldChange, n = n) %>%
+    ungroup()
+  
+  return(top_genes)
+}
+
+# Get top 20 genes
+
+top_genes <- get_top_genes(data = significant_genes, baseMean_threshold = 500, n = 20, matrix = ligand_target_matrix)
+
+print(top_genes$gene)
+
+```
+
+```{r}
+# Adjusting the plot size by specifying width and height
+# plot_width <- 14
+# plot_height <- 8
+
+# Create the plot
+# p <- 
+  ggplot(significant_genes, aes(x = log2(baseMean), y = log2FoldChange)) +
+  geom_point(aes(color = ifelse(log2FoldChange > 0, "Positive", "Negative")), alpha = 0.5) +
+  geom_text_repel(
+    data = top_genes,
+    aes(label = gene, x = log2(baseMean), y = log2FoldChange),
+    size = 4,  # Adjust the text size as needed
+    box.padding = unit(0.35, "lines"),  # Space around the text
+    point.padding = unit(0.5, "lines"),  # Space between the point and the text
+    segment.color = 'grey50',  # Line color from point to text
+    segment.size = 0.5,  # Line thickness
+    nudge_x = 0.5,  # Horizontal adjustment to prevent overlap
+    nudge_y = 0.5,  # Vertical adjustment to prevent overlap
+    check_overlap = FALSE  # Force all labels to be printed
+  ) +
+  theme_minimal() +
+  labs(
+    x = "Average Expression (log2 scale)",
+    y = "Log2 Fold Change",
+    title = "MA Plot of Significant Genes",
+    color = "Fold Change Sign"
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  scale_color_manual(values = c("Positive" = "blue", "Negative" = "red")) +
+  theme(legend.position = "bottom")
+
+# Display the plot
+# print(p)
+
+# Save the plot with the specified dimensions
+# ggsave("MA_Plot_Significant-gene-adipocyte-frc", plot = p, width = plot_width, height = plot_height, dpi = 300)
 ```
 
 # Step 3: Define a set of potential ligands
 
-As potentially active ligands, we will use ligands that are 1) expressed by CAFs and 2) can bind a (putative) receptor expressed by malignant cells. Putative ligand-receptor links were gathered from NicheNet’s ligand-receptor data sources.
+As potentially active ligands, we will use ligands that are
+
+1) expressed by VAMs
+
+2) can bind a (putative) receptor expressed by FRCs.
+
+Putative ligand-receptor links were gathered from NicheNet’s ligand-receptor data sources and focus on protein-protein interactions
 
 ```{r}
 # If wanted, users can remove ligand-receptor interactions that were predicted based on protein-protein interactions and only keep ligand-receptor interactions that are described in curated databases. To do this: uncomment following line of code:
 # lr_network = lr_network %>% filter(database != "ppi_prediction_go" & database != "ppi_prediction")
+# Note: we decide to focus on protein-protein interactions because they are more biologically relevant in the context of intercellular communication
 
+# Define expressed ligands in VAMs that are present in NicheNet ligand list. Can be underestimated due to missing data
 ligands = lr_network %>% pull(from) %>% unique()
-expressed_ligands = intersect(ligands,expressed_genes_sender)
+expressed_ligands_VAMs = intersect(ligands,expressed_genes_sender$gene)
 
+# > head(expressed_ligands_VAMs)
+# [1] "Abca1"  "Adam10" "Adam15" "Adam17" "Adam9"  "Adgre5"
+# > length(expressed_ligands_VAMs)
+# [1] 310
+
+# Define expressed receptors in FRCs that are present in NicheNet receptor list. Can be underestimated due to missing data
 receptors = lr_network %>% pull(to) %>% unique()
-expressed_receptors = intersect(receptors,expressed_genes_receiver)
+expressed_receptors_FRC = intersect(receptors,expressed_genes_receiver_FRC$gene)
 
-lr_network_expressed = lr_network %>% filter(from %in% expressed_ligands & to %in% expressed_receptors) 
+# > head(expressed_receptors_FRC)
+# [1] "Ddr1"   "Atrn"   "Mgrn1"  "Lrp1"   "Mmp2"   "Megf10"
+# > length(expressed_receptors_FRC)
+# [1] 353
+
+# # Define ligand receptor matrix between VAMs - FRCs that are present in NicheNet ligand-receptor pairs. Can be underestimated due to missing data
+lr_network_expressed = lr_network %>% filter(from %in% expressed_ligands_VAMs & to %in% expressed_receptors_FRC) 
 head(lr_network_expressed)
-## # A tibble: 6 × 2
-##   from   to     
-##   <chr>  <chr>  
-## 1 A2M    MMP2   
-## 2 A2M    MMP9   
-## 3 ADAM10 APP    
-## 4 ADAM10 CD44   
-## 5 ADAM10 TSPAN5 
-## 6 ADAM10 TSPAN15
+## A tibble: 6 × 2
+#  from   to    
+#   <chr>  <chr> 
+# 1 Abca1  Megf10
+# 2 Adam10 App   
+# 3 Adam10 Axl   
+# 4 Adam10 Cd44  
+# 5 Adam10 Epha3 
+# 6 Adam10 Notch1
 ```
 
 This ligand-receptor network contains the expressed ligand-receptor interactions. As potentially active ligands for the NicheNet analysis, we will consider the ligands from this network.
@@ -448,50 +576,72 @@ This ligand-receptor network contains the expressed ligand-receptor interactions
 ```{r}
 potential_ligands = lr_network_expressed %>% pull(from) %>% unique()
 head(potential_ligands)
-## [1] "A2M"    "ADAM10" "ADAM12" "ADAM15" "ADAM17" "ADAM9"
+## [1] "Abca1"  "Adam10" "Adam15" "Adam17" "Adam9"  "Adgre5"
+
+# > which(potential_ligands == "Abca1")
+# [1] 1
+# > which(potential_ligands == "Ccl8") # cool! Detect Ccl8!
+# [1] 44
 ```
 
 # Step 4: Perform NicheNet’s ligand activity analysis on the gene set of interest
 
-Now perform the ligand activity analysis: in this analysis, we will calculate the ligand activity of each ligand, or in other words, we will assess how well each CAF-ligand can predict the p-EMT gene set compared to the background of expressed genes (predict whether a gene belongs to the p-EMT program or not).
+Now perform the ligand activity analysis: in this analysis, we will calculate the ligand activity of each ligand, or in other words, we will assess how well each VAM-ligand can predict the potential adipogenesis gene set compared to the background of expressed genes (predict whether a gene belongs to the adipogenesis program or not).
 
 ```{r}
+# Arguments for the function "predict_ligand_activities"
+
+# geneset_oi:
+# includes all differentially expressed genes between FRCs and Adipocytes
+# padj value < 0.5, absolute value of logFoldChange > 2
+# > length(geneset_oi)
+# [1] 1518
+
+# background_expressed_genes: 
+# Define a background gene set are not involved in adipocyte maturation by
+# Removing the gene set of interest (geneset_oi) from FRC expression genes
+
+# ligand_target_matrix of mouse defined by NicheNet
+
+# potential_ligands expressed by VAMs & intersect NicheNet ligand-receptor matrix database
+
 ligand_activities = predict_ligand_activities(geneset = geneset_oi, background_expressed_genes = background_expressed_genes, ligand_target_matrix = ligand_target_matrix, potential_ligands = potential_ligands)
 ```
 
-Now, we want to rank the ligands based on their ligand activity. In our validation study, we showed that the area under the precision-recall curve (AUPR) between a ligand’s target predictions and the observed transcriptional response was the most informative measure to define ligand activity (this was the Pearson correlation for v1). Therefore, we will rank the ligands based on their AUPR. This allows us to prioritize p-EMT-regulating ligands.
+Now, we want to rank the ligands based on their ligand activity. In the NicheNet validation study, they showed that the area under the precision-recall curve (AUPR) between a ligand’s target predictions and the observed transcriptional response was the most informative measure to define ligand activity (this was the Pearson correlation for v1). Therefore, we will rank the ligands based on their AUPR. This allows us to prioritize adipogenesis-regulating ligands.
 
 ```{r}
 ligand_activities %>% arrange(-aupr_corrected) 
-## # A tibble: 212 × 5
-##    test_ligand auroc   aupr aupr_corrected pearson
-##    <chr>       <dbl>  <dbl>          <dbl>   <dbl>
-##  1 TGFB2       0.772 0.120          0.105    0.195
-##  2 BMP8A       0.774 0.0852         0.0699   0.175
-##  3 INHBA       0.777 0.0837         0.0685   0.122
-##  4 CXCL12      0.714 0.0829         0.0676   0.141
-##  5 LTBP1       0.727 0.0762         0.0609   0.160
-##  6 CCN2        0.736 0.0734         0.0581   0.141
-##  7 TNXB        0.719 0.0717         0.0564   0.157
-##  8 ENG         0.764 0.0703         0.0551   0.145
-##  9 BMP5        0.750 0.0691         0.0538   0.148
-## 10 VCAN        0.720 0.0687         0.0534   0.140
-## # … with 202 more rows
+# # A tibble: 227 × 5
+#    test_ligand auroc  aupr aupr_corrected pearson
+#    <chr>       <dbl> <dbl>          <dbl>   <dbl>
+#  1 Tgfb1       0.635 0.269         0.110   0.202 
+#  2 Tnf         0.587 0.230         0.0711  0.134 
+#  3 Bmp2        0.576 0.227         0.0685  0.125 
+#  4 Ang         0.590 0.226         0.0665  0.102 
+#  5 Angptl3     0.586 0.221         0.0620  0.114 
+#  6 Zdhhc5      0.581 0.219         0.0602  0.0995
+#  7 Ccl12       0.553 0.217         0.0581  0.0850
+#  8 Lama4       0.578 0.217         0.0581  0.101 
+#  9 Angptl4     0.562 0.217         0.0576  0.104 
+# 10 Ifitm6      0.573 0.216         0.0572  0.101 
+# # ℹ 217 more rows
+
 best_upstream_ligands = ligand_activities %>% top_n(30, aupr_corrected) %>% arrange(-aupr_corrected) %>% pull(test_ligand)
 head(best_upstream_ligands)
-## [1] "TGFB2"  "BMP8A"  "INHBA"  "CXCL12" "LTBP1"  "CCN2"
+## [1] "Tgfb1"   "Tnf"     "Bmp2"    "Ang"     "Angptl3" "Zdhhc5"
 ```
 
-We see here that the performance metrics indicate that the 30 top-ranked ligands can predict the p-EMT genes reasonably, this implies that ranking of the ligands might be accurate as shown in our study. However, it is possible that for some gene sets, the target gene prediction performance of the top-ranked ligands would not be much better than random prediction. In that case, prioritization of ligands will be less trustworthy.
+We see here that the performance metrics indicate that the 30 top-ranked ligands can predict the potential adipogenesis genes reasonably, this implies that ranking of the ligands might be accurate as shown in our study. However, it is possible that for some gene sets, the target gene prediction performance of the top-ranked ligands would not be much better than random prediction. In that case, prioritization of ligands will be less trustworthy
 
-Additional note: we looked at the top 30 ligands here and will continue the analysis by inferring p-EMT target genes of these 30 ligands. However, the choice of looking only at the 30 top-ranked ligands for further biological interpretation is based on biological intuition and is quite arbitrary. Therefore, users can decide to continue the analysis with a different number of ligands. We recommend to check the selected cutoff by looking at the distribution of the ligand activity values. Here, we show the ligand activity histogram (the score for the 30th ligand is indicated via the dashed line).
+Additional note from NicheNet: we looked at the top 30 ligands here and will continue the analysis by inferring adipocyte maturation target genes of these 30 ligands. However, the choice of looking only at the 30 top-ranked ligands for further biological interpretation is based on biological intuition and is quite arbitrary. Therefore, users can decide to continue the analysis with a different number of ligands. We recommend to check the selected cutoff by looking at the distribution of the ligand activity values. Here, we show the ligand activity histogram (the score for the 30th ligand is indicated via the dashed line).
 
 ```{r}
 # show histogram of ligand activity scores
 p_hist_lig_activity = ggplot(ligand_activities, aes(x=aupr_corrected)) + 
   geom_histogram(color="black", fill="darkorange")  + 
   # geom_density(alpha=.1, fill="orange") +
-  geom_vline(aes(xintercept=min(ligand_activities %>% top_n(30, aupr_corrected) %>% pull(aupr_corrected))), color="red", linetype="dashed", linewidth=1) + 
+  geom_vline(aes(xintercept=min(ligand_activities %>% top_n(20, aupr_corrected) %>% pull(aupr_corrected))), color="red", linetype="dashed", linewidth=1) + 
   labs(x="ligand activity (PCC)", y = "# ligands") +
   theme_classic()
 p_hist_lig_activity
