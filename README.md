@@ -38,7 +38,7 @@ Emont, M. P.; Jacobs, C.; Essene, A. L.; Pant, D.; Tenen, D.; Colleluori, G.; Di
 ## Folder structure
 
 
-I have subfolders in this repo
+We have subfolders in this repo
 
 - data: the raw data of single cell RNAseq of human and mouse white adipose tissue
 - code: source files for producing the figure
@@ -47,12 +47,14 @@ I have subfolders in this repo
 
 ## Installation
 
+### NicheNet Analysis
+
 
 R version 4.3.3
 
 RStudio version: 2023.12.1.402
 
-Packages: I included those relevant codes in **code/NicheNet_VAMs_PSET6.Rmd**
+Packages: Relevant codes are in **code/NicheNet_VAMs.Rmd**
 
 > install.packages("devtools")
 > 
