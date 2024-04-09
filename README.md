@@ -20,7 +20,7 @@ Git repo of NicheNet: https://github.com/saeyslab/nichenetr/tree/master
 
 Browaeys, R.; Saelens, W.; Saeys, Y. NicheNet: Modeling Intercellular Communication by Linking Ligands to Target Genes. Nat. Methods 2020, 17 (2), 159–162. https://doi.org/10.1038/s41592-019-0667-5.
 
-DESeq2: find differentially expressed genes and plot
+**DESeq2**: find differentially expressed genes and plot
 
 Love, M.I., Huber, W., Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2 Genome Biology 15(12):550 (2014)
 
