@@ -28,7 +28,7 @@ Love, M.I., Huber, W., Anders, S. Moderated estimation of fold change and disper
 
 **RNA-seq data of VAMs and other resident cells: Silva_WAT_cMAF_vs_WT.csv** 
 
-Moura Silva Hernandez; Kitoko Jamil Zola; Queiroz Camila Pereira; Kroehling Lina; Matheis Fanny; Yang Katharine Lu; Reis Bernardo S.; Ren-Fielding Christine; Littman Dan R.; Bozza Marcelo Torres; Mucida Daniel; Lafaille Juan J. C-MAF–Dependent Perivascular Macrophages Regulate Diet-Induced Metabolic Syndrome. Sci. Immunol. 2021, 6 (64), eabg7506. https://doi.org/10.1126/sciimmunol.abg7506.![image](https://github.com/Jia-Zhao1998/JiaPSET6/assets/67213486/3a65aea6-b3d7-4e45-9b02-ee70328722ec)
+Moura Silva Hernandez; Kitoko Jamil Zola; Queiroz Camila Pereira; Kroehling Lina; Matheis Fanny; Yang Katharine Lu; Reis Bernardo S.; Ren-Fielding Christine; Littman Dan R.; Bozza Marcelo Torres; Mucida Daniel; Lafaille Juan J. C-MAF–Dependent Perivascular Macrophages Regulate Diet-Induced Metabolic Syndrome. Sci. Immunol. 2021, 6 (64), eabg7506. https://doi.org/10.1126/sciimmunol.abg7506.
 
 
 **A Single-Cell Atlas of Human and Mouse White Adipose Tissue**
