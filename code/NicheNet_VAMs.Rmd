@@ -528,9 +528,9 @@ print(top_genes$gene)
 
 As potentially active ligands, we will use ligands that are
 
-1) expressed by VAMs
+1)  expressed by VAMs
 
-2) can bind a (putative) receptor expressed by FRCs.
+2)  can bind a (putative) receptor expressed by FRCs.
 
 Putative ligand-receptor links were gathered from NicheNet’s ligand-receptor data sources and focus on protein-protein interactions
 
@@ -594,6 +594,7 @@ Now perform the ligand activity analysis: in this analysis, we will calculate th
 # geneset_oi:
 # includes all differentially expressed genes between FRCs and Adipocytes
 # padj value < 0.5, absolute value of logFoldChange > 2
+# Also those genes are included in the NicheNet ligand-receptor matrix 
 # > length(geneset_oi)
 # [1] 1518
 
@@ -627,14 +628,31 @@ ligand_activities %>% arrange(-aupr_corrected)
 # 10 Ifitm6      0.573 0.216         0.0572  0.101 
 # # ℹ 217 more rows
 
-best_upstream_ligands = ligand_activities %>% top_n(30, aupr_corrected) %>% arrange(-aupr_corrected) %>% pull(test_ligand)
+# auroc: A value of 1 would mean perfect prediction, while a value of 0.5 suggests no better than random chance. prediction of a ligand activity in a given gene set. 
+
+# Below is from NicheNet example
+## # A tibble: 212 × 5
+##    test_ligand auroc   aupr aupr_corrected pearson
+##    <chr>       <dbl>  <dbl>          <dbl>   <dbl>
+##  1 TGFB2       0.772 0.120          0.105    0.195
+##  2 BMP8A       0.774 0.0852         0.0699   0.175
+##  3 INHBA       0.777 0.0837         0.0685   0.122
+##  4 CXCL12      0.714 0.0829         0.0676   0.141
+##  5 LTBP1       0.727 0.0762         0.0609   0.160
+##  6 CCN2        0.736 0.0734         0.0581   0.141
+##  7 TNXB        0.719 0.0717         0.0564   0.157
+##  8 ENG         0.764 0.0703         0.0551   0.145
+##  9 BMP5        0.750 0.0691         0.0538   0.148
+## 10 VCAN        0.720 0.0687         0.0534   0.140
+
+best_upstream_ligands = ligand_activities %>% top_n(20, aupr_corrected) %>% arrange(-aupr_corrected) %>% pull(test_ligand)
 head(best_upstream_ligands)
 ## [1] "Tgfb1"   "Tnf"     "Bmp2"    "Ang"     "Angptl3" "Zdhhc5"
 ```
 
-We see here that the performance metrics indicate that the 30 top-ranked ligands can predict the potential adipogenesis genes reasonably, this implies that ranking of the ligands might be accurate as shown in our study. However, it is possible that for some gene sets, the target gene prediction performance of the top-ranked ligands would not be much better than random prediction. In that case, prioritization of ligands will be less trustworthy
+We see here that the performance metrics indicate that the 40 top-ranked ligands can predict the potential adipogenesis genes reasonably, this implies that ranking of the ligands might be accurate as shown in our study. However, it is possible that for some gene sets, the target gene prediction performance of the top-ranked ligands would not be much better than random prediction. In that case, prioritization of ligands will be less trustworthy
 
-Additional note from NicheNet: we looked at the top 30 ligands here and will continue the analysis by inferring adipocyte maturation target genes of these 30 ligands. However, the choice of looking only at the 30 top-ranked ligands for further biological interpretation is based on biological intuition and is quite arbitrary. Therefore, users can decide to continue the analysis with a different number of ligands. We recommend to check the selected cutoff by looking at the distribution of the ligand activity values. Here, we show the ligand activity histogram (the score for the 30th ligand is indicated via the dashed line).
+Additional note from NicheNet: we looked at the top 40 ligands here and will continue the analysis by inferring adipocyte maturation target genes of these 40 ligands. However, the choice of looking only at the 40 top-ranked ligands for further biological interpretation is based on biological intuition and is quite arbitrary. Therefore, users can decide to continue the analysis with a different number of ligands. We recommend to check the selected cutoff by looking at the distribution of the ligand activity values. Here, we show the ligand activity histogram (the score for the 40th ligand is indicated via the dashed line).
 
 ```{r}
 # show histogram of ligand activity scores
@@ -645,56 +663,65 @@ p_hist_lig_activity = ggplot(ligand_activities, aes(x=aupr_corrected)) +
   labs(x="ligand activity (PCC)", y = "# ligands") +
   theme_classic()
 p_hist_lig_activity
+
+print(best_upstream_ligands)
+
+
+# if selecting top 40 ligands:
+#  [1] "Tgfb1"    "Tnf"      "Bmp2"     "Ang"      "Angptl3"  "Zdhhc5"   "Ccl12"    "Lama4"    "Angptl4"  "Ifitm6"  
+# [11] "Ccl3"     "Angptl2"  "Il1rn"    "S100a4"   "Jam2"     "Il1b"     "Hbegf"    "Postn"    "Il1a"     "Atp1b1"  
+# [21] "Ceacam1"  "Ccl25"    "Pdgfb"    "Pf4"      "Il10"     "Ccl6"     "Ccl9"     "Slc6a8"   "Ccl7"     "Fn1"     
+# [31] "C1qb"     "Bgn"      "C3"       "Cd44"     "Itga4"    "Vcan"     "Serpinf1" "Col14a1"  "Osm"      "Col6a3"
 ```
 
 # Step 5: Infer target genes of top-ranked ligands and visualize in a heatmap
 
-Now we will show how you can look at the regulatory potential scores between ligands and target genes of interest. In this case, we will look at links between top-ranked p-EMT regulating ligands and p-EMT genes. In the ligand-target heatmaps, we show here regulatory potential scores for interactions between the 20 top-ranked ligands and following target genes: genes that belong to the gene set of interest and to the 250 most strongly predicted targets of at least one of the 20 top-ranked ligands (the top 250 targets according to the general prior model, so not the top 250 targets for this dataset). Consequently, genes of your gene set that are not a top target gene of one of the prioritized ligands, will not be shown on the heatmap.
+Now we will show how you can look at the regulatory potential scores between ligands and target genes of interest. In this case, we will look at links between top-ranked VAM ligands and potential adipogenesis genes. In the ligand-target heatmaps, we show here regulatory potential scores for interactions between the **40** top-ranked ligands and following target genes: genes that belong to the gene set of interest and to the 250 most strongly predicted targets of at least one of the 40 top-ranked ligands. Consequently, genes of your gene set that are not a top target gene of one of the prioritized ligands, will not be shown on the heatmap.
 
 ```{r}
 active_ligand_target_links_df = best_upstream_ligands %>% lapply(get_weighted_ligand_target_links,geneset = geneset_oi, ligand_target_matrix = ligand_target_matrix, n = 250) %>% bind_rows()
 
+# geneset_oi contains all differentially expressed genes between Adipocytes vs FRCs
+# Recommend to read more about how the function works. Can remove #
+# ?get_weighted_ligand_target_links
+
 nrow(active_ligand_target_links_df)
-## [1] 460
+## [1] 816
 head(active_ligand_target_links_df)
-## # A tibble: 6 × 3
-##   ligand target  weight
-##   <chr>  <chr>    <dbl>
-## 1 TGFB2  ACTN1   0.0849
-## 2 TGFB2  C1S     0.124 
-## 3 TGFB2  COL17A1 0.0732
-## 4 TGFB2  COL1A1  0.243 
-## 5 TGFB2  COL4A2  0.148 
-## 6 TGFB2  F3      0.0747
+# # A tibble: 6 × 3
+#   ligand target weight
+#   <chr>  <chr>   <dbl>
+# 1 Tgfb1  Ackr3   0.251
+# 2 Tgfb1  Adam12  0.211
+# 3 Tgfb1  Adam19  0.218
+# 4 Tgfb1  Adm     0.178
+# 5 Tgfb1  Bgn     0.152
+# 6 Tgfb1  Cebpd   0.222
+# weight: regulatory potential score
+
+# remove interactions with low regulatory potential (below the average (median))
+ranked_active_ligand_target_links_df <- active_ligand_target_links_df %>% arrange(desc(weight)) %>% filter(weight > 0.1)
 ```
 
-For visualization purposes, we adapted the ligand-target regulatory potential matrix as follows. Regulatory potential scores were set as 0 if their score was below a predefined threshold, which was here the 0.25 quantile of scores of interactions between the 30 top-ranked ligands and each of their respective top targets (see the ligand-target network defined in the data frame).
+For visualization purposes, we adapted the ligand-target regulatory potential matrix as follows. Regulatory potential scores were set as 0 if their score was below a predefined threshold, which was here the 0.25 quantile of scores of interactions between the 40 top-ranked ligands and each of their respective top targets (see the ligand-target network defined in the data frame).
 
 ```{r}
-active_ligand_target_links = prepare_ligand_target_visualization(ligand_target_df = active_ligand_target_links_df, ligand_target_matrix = ligand_target_matrix, cutoff = 0.25)
-
-nrow(active_ligand_target_links_df)
-## [1] 460
-head(active_ligand_target_links_df)
-## # A tibble: 6 × 3
-##   ligand target  weight
-##   <chr>  <chr>    <dbl>
-## 1 TGFB2  ACTN1   0.0849
-## 2 TGFB2  C1S     0.124 
-## 3 TGFB2  COL17A1 0.0732
-## 4 TGFB2  COL1A1  0.243 
-## 5 TGFB2  COL4A2  0.148 
-## 6 TGFB2  F3      0.0747
+active_ligand_target_links = prepare_ligand_target_visualization(ligand_target_df = ranked_active_ligand_target_links_df, ligand_target_matrix = ligand_target_matrix, cutoff = 0.25)
 ```
 
 The putatively active ligand-target links will now be visualized in a heatmap. The order of the ligands accord to the ranking according to the ligand activity prediction.
 
 ```{r}
 order_ligands = intersect(best_upstream_ligands, colnames(active_ligand_target_links)) %>% rev()
-order_targets = active_ligand_target_links_df$target %>% unique()
+order_targets = ranked_active_ligand_target_links_df$target %>% unique()
+order_targets <- intersect(order_targets, rownames(active_ligand_target_links))
+
+# > length(order_targets)
+# [1] 135
+
 vis_ligand_target = active_ligand_target_links[order_targets,order_ligands] %>% t()
 
-p_ligand_target_network = vis_ligand_target %>% make_heatmap_ggplot("Prioritized CAF-ligands","p-EMT genes in malignant cells", color = "purple",legend_position = "top", x_axis_position = "top",legend_title = "Regulatory potential") + scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.005,0.01)) + theme(axis.text.x = element_text(face = "italic"))
+p_ligand_target_network = vis_ligand_target %>% make_heatmap_ggplot("Prioritized VAMs-ligands","potential adipogenesis genes adipocyte vs FRCs", color = "purple",legend_position = "top", x_axis_position = "top",legend_title = "Regulatory potential") + scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.1,0.3)) + theme(axis.text.x = element_text(face = "italic"))
 
 p_ligand_target_network
 ```
@@ -713,7 +740,7 @@ So, we will now infer the predicted ligand-receptor interactions of the top-rank
 
 ```{r}
 # get the ligand-receptor network of the top-ranked ligands
-lr_network_top = lr_network %>% filter(from %in% best_upstream_ligands & to %in% expressed_receptors) %>% distinct(from,to)
+lr_network_top = lr_network %>% filter(from %in% best_upstream_ligands & to %in% expressed_receptors_FRC) %>% distinct(from,to)
 best_upstream_receptors = lr_network_top %>% pull(to) %>% unique()
 
 # get the weights of the ligand-receptor interactions as used in the NicheNet model
