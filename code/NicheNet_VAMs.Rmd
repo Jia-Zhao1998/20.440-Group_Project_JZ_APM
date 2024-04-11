@@ -267,7 +267,7 @@ head(results)
 
 ### **Filter to identify significantly expressed genes based on three criteria**
 
-1.  padj \< 0.05
+1.  padj \< 0.01
 2.  absolute log fold change between groups in normalized counts (expression) \> 2
 3.  mean expression \> 100
 
@@ -275,23 +275,23 @@ head(results)
 # Convert results to a data frame, typically needed for ggplot2-based plotting
 res_df <- as.data.frame(results)
 
-# Filter for significant genes with padj < 0.05 and absolute log fold change in normalized counts (expression) > 2 and mean expression > 100
-significant_genes <- res_df[res_df$padj < 0.05 & abs(res_df$log2FoldChange) > 2 & res_df$baseMean > 100, ] %>% distinct()
+# Filter for significant genes with padj < 0.01 and absolute log fold change in normalized counts (expression) > 2 and mean expression > 100
+significant_genes <- res_df[res_df$padj < 0.01 & abs(res_df$log2FoldChange) > 2 & res_df$baseMean > 100, ] %>% distinct()
 
 nrow(significant_genes)
-# [1] 1664
+# [1] 1646
 
 # Filter significantly upregulated genes & log fold change in normalized counts (expression) > 2 and rank in decreasing log2FoldCahnge
 gene_Upregulated <- significant_genes[significant_genes$log2FoldChange > 2, ] %>% arrange(desc(log2FoldChange))
 nrow((gene_Upregulated))
 head(gene_Upregulated)
-# [1] 837
+# [1] 829
 
 # Filter significantly downregulated genes & log fold change in normalized counts (expression) < -2 and rank based on decreasing absolute value of log2FoldChange
 gene_Downregulated <- significant_genes[significant_genes$log2FoldChange < -2, ] %>% arrange(desc(abs(log2FoldChange)))
 nrow(gene_Downregulated)
 head(gene_Downregulated)
-# [1] 828
+# [1] 818
 ```
 
 ### Plot
@@ -347,14 +347,14 @@ ggmaplot(
   genenames = rownames(res_df),
   size = 1.5,
   alpha = 0.7,
-  font.label = c(12, "plain", "black"),
+  font.label = c(14, "plain", "black"),
   palette = c("red", "blue", "darkgray"),
   top = 20,
   select.top.method = c("padj", "fc"),
   main = "MA Plot: WT Adipocyte vs FRC",
   xlab = "Log2 mean expression",
   ylab = "Log2 fold change",
-  ggtheme = theme_classic()
+  ggtheme = theme_classic() + theme(plot.title = element_text(size = 20, hjust = 0.5, face = "bold"))
 )
 
 # dev.off()
@@ -373,7 +373,7 @@ EnhancedVolcano(res_df,
                 xlab = 'Log2 Fold Change',
                 ylab = '-Log10 Adjusted P-value',
                 selectLab = top_genes, # Genes to label: top 
-                pCutoff = 0.05,
+                pCutoff = 0.01,
                 FCcutoff = 2,
                 pointSize = 2.0,
                 labSize = 4.0,
@@ -427,6 +427,7 @@ Heatmap(log2(normalized_counts[top_genes, ] + 1),
 
 ```{r}
 # I select all 1663 genes that are differentially expressed 
+# significant_genes$gene <- rownames(significant_genes)
 gene_indicator = significant_genes$gene %in% rownames(ligand_target_matrix) # make sure the gene name is consistent with that used in NicheNet matrix
 geneset_oi_df <- significant_genes[gene_indicator, ]
 geneset_oi <- geneset_oi_df$gene
@@ -445,16 +446,27 @@ head(background_expressed_genes)
 ```
 
 ```{r}
+# Here are codes to export a list of significant_genes and can be paste to GO term analysis https://geneontology.org/
+
+# install.packages("clipr")
+library('clipr')
+
+# Convert the "gene" column to a character vector
+genes <- as.character(expressed_ligands_VAMs)
+
+# Combine the vector into a single string separated by newline characters
+genes_export <- paste(genes, collapse = "\n")
+
+# Copy to clipboard (Windows only)
+write_clip(genes_export)
+```
+
+```{r}
 library(ggplot2)
 library(dplyr)
 
-# Convert rownames to a column, assuming rownames are the gene names
-significant_genes <- significant_genes %>%
-  rownames_to_column(var = "gene")
-
 # Calculate the absolute log2FoldChange to help with sorting
 significant_genes$abs_log2FoldChange <- abs(significant_genes$log2FoldChange)
-
 
 # Define the function to select top genes of interest based on
 # data: the data contains a data frame of differentially expressed genes predefined: significant_genes
@@ -551,11 +563,17 @@ expressed_ligands_VAMs = intersect(ligands,expressed_genes_sender$gene)
 # Define expressed receptors in FRCs that are present in NicheNet receptor list. Can be underestimated due to missing data
 receptors = lr_network %>% pull(to) %>% unique()
 expressed_receptors_FRC = intersect(receptors,expressed_genes_receiver_FRC$gene)
+expressed_receptors_Adipocyte = intersect(receptors,expressed_genes_receiver_adipocyte$gene)
 
 # > head(expressed_receptors_FRC)
 # [1] "Ddr1"   "Atrn"   "Mgrn1"  "Lrp1"   "Mmp2"   "Megf10"
 # > length(expressed_receptors_FRC)
 # [1] 353
+
+# > head(expressed_receptors_Adipocyte)
+# [1] "Ddr1"  "Atrn"  "F11r"  "Mc2r"  "Mgrn1" "Lrp1" 
+# > length(expressed_receptors_Adipocyte)
+# [1] 376
 
 # # Define ligand receptor matrix between VAMs - FRCs that are present in NicheNet ligand-receptor pairs. Can be underestimated due to missing data
 lr_network_expressed = lr_network %>% filter(from %in% expressed_ligands_VAMs & to %in% expressed_receptors_FRC) 
@@ -721,7 +739,22 @@ order_targets <- intersect(order_targets, rownames(active_ligand_target_links))
 
 vis_ligand_target = active_ligand_target_links[order_targets,order_ligands] %>% t()
 
-p_ligand_target_network = vis_ligand_target %>% make_heatmap_ggplot("Prioritized VAMs-ligands","potential adipogenesis genes adipocyte vs FRCs", color = "purple",legend_position = "top", x_axis_position = "top",legend_title = "Regulatory potential") + scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.1,0.3)) + theme(axis.text.x = element_text(face = "italic"))
+p_ligand_target_network = vis_ligand_target %>% make_heatmap_ggplot("Prioritized VAMs-ligands","potential adipogenesis genes adipocyte vs FRCs", color = "purple",legend_position = "top", x_axis_position = "top",legend_title = "Regulatory potential") + scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.1,0.3)) + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+
+p_ligand_target_network
+```
+
+```{r}
+p_ligand_target_network <- vis_ligand_target %>%
+  make_heatmap_ggplot("Prioritized VAMs-ligands",
+                      "potential adipogenesis genes adipocyte vs FRCs",
+                      color = "purple",
+                      legend_position = "top",
+                      x_axis_position = "top",
+                      legend_title = "Regulatory potential") +
+  scale_fill_gradient2(low = "whitesmoke", high = "purple", breaks = c(0,0.1,0.3)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 4),
+        axis.ticks.x = element_blank())
 
 p_ligand_target_network
 ```
