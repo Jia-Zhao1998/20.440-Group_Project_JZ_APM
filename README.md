@@ -24,6 +24,10 @@ Browaeys, R.; Saelens, W.; Saeys, Y. NicheNet: Modeling Intercellular Communicat
 
 Love, M.I., Huber, W., Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2 Genome Biology 15(12):550 (2014)
 
+**Scanpy**: cluster and visualize cell types using marker genes
+
+Wolf, F., Angerer, P. & Theis, F. SCANPY: large-scale single-cell gene expression data analysis. Genome Biol 19, 15 (2018). https://doi.org/10.1186/s13059-017-1382-0
+
 ## Data
 
 **RNA-seq data of VAMs and other resident cells: Silva_WAT_cMAF_vs_WT.csv** 
@@ -42,6 +46,7 @@ We have subfolders in this repo
 
 - data: the raw data of single cell RNAseq of human and mouse white adipose tissue
 - code: source files for producing the figure
+  - scRNA-seq data: folder with human WAT scRNA-seq data, metadata, features, and barcodes
 - figure: the final figures
 - raw: Intermediate data files produced by the scripts. These files are not git committed.
 
