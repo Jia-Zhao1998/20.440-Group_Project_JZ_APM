@@ -7,7 +7,7 @@ Members: Jia Zhao; Adriana Payan-Medina
 
 The repo contains the code and data to reproduce all figures and results for the group project of 20.440 Analysis of Biological Network (MIT)
 
-Resident tissue macrophages (RTMs) are present ubiquitously in every tissue and organ, yet how they support tissue and organ function is largely unknown. Since intercellular communication is critical for tissue homeostasis, the goal is to use computational methods to unveil cell-cell communication between fat resident tissue macrophages, called vasculature-associated macrophages (VAMs), and other cell types to decode complex cellular circuits and infer novel functions of tissue-resident macrophages. The use of scRNA-seq analysis was also conducted to validate and investigate adipose RTM function. 
+Resident tissue macrophages (RTMs) are present ubiquitously in every tissue and organ, yet how they support tissue and organ function is largely unknown. Since intercellular communication is critical for tissue homeostasis, the goal is to use computational methods to unveil cell-cell communication between fat RTMs and other cell types to decode complex cellular circuits and infer novel functions of RTMs in adipogenesis. The use of scRNA-seq analysis was also conducted to validate and investigate adipose RTM function. 
 
 ## Citation/Method
 
@@ -36,7 +36,7 @@ Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-28
 
 ## Data
 
-**RNA-seq data of VAMs and other resident cells: Silva_WAT_cMAF_vs_WT.csv** 
+**RNA-seq data of RTMs and other resident cells: Silva_WAT_cMAF_vs_WT.csv** 
 
 Moura Silva Hernandez; Kitoko Jamil Zola; Queiroz Camila Pereira; Kroehling Lina; Matheis Fanny; Yang Katharine Lu; Reis Bernardo S.; Ren-Fielding Christine; Littman Dan R.; Bozza Marcelo Torres; Mucida Daniel; Lafaille Juan J. C-MAF–Dependent Perivascular Macrophages Regulate Diet-Induced Metabolic Syndrome. Sci. Immunol. 2021, 6 (64), eabg7506. https://doi.org/10.1126/sciimmunol.abg7506.
 
@@ -48,9 +48,9 @@ Emont, M. P.; Jacobs, C.; Essene, A. L.; Pant, D.; Tenen, D.; Colleluori, G.; Di
 ## Folder structure
 
 
-We have subfolders in this repo
+We have folders and subfolders in this repo:
 
-- **data/**: the raw data of single-cell RNAseq of human and mouse white adipose tissue
+- **data/**: the raw RNAseq data of mouse white adipose tissue RTMs and other resident cells
   - **scRNA_HWAT/**: subfolder with human WAT scRNA-seq UMAP results, metadata, features, and barcodes. The Matrix file referenced in 'A Single-Cell Atlas of Human and Mouse White Adipose Tissue' was locally stored due to its considerable size and the uploading constraints of GitHub. However, it is openly accessible via the provided link.
 - **code/**: source files for producing the results and figures
 - **figures/**: the final figures included in the submission 
