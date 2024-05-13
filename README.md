@@ -1,12 +1,13 @@
 # 20.440 Group Project
+## Defining the contribution of adipose resident tissue macrophages to adipogenesis
 Time: Spring 2024
 Members: Jia Zhao; Adriana Payan-Medina
 
 ## Overview
 
-The repo contains the code and data to reproduce one figure for the group project of 20.440 Analysis of Biological Network (MIT)
+The repo contains the code and data to reproduce all figures and results for the group project of 20.440 Analysis of Biological Network (MIT)
 
-Tissue resident macrophages (TRMs) are present ubiquitously in every tissue and organ, yet how they support tissue and organ function is largely unknown. Since intercellular commnunication is critical for tissue homeostasis, the goal is to use computational methods to unveil cell-cell communication between fat tissue resident macrophages, called vasculature associated macrophages (VAMs), and other cell types to decode complex cellular circuits and infer novel functions of tissue resident macrophages. 
+Resident tissue macrophages (RTMs) are present ubiquitously in every tissue and organ, yet how they support tissue and organ function is largely unknown. Since intercellular communication is critical for tissue homeostasis, the goal is to use computational methods to unveil cell-cell communication between fat resident tissue macrophages, called vasculature-associated macrophages (VAMs), and other cell types to decode complex cellular circuits and infer novel functions of tissue-resident macrophages. The use of scRNA-seq analysis was also conducted to validate and investigate adipose RTM function. 
 
 ## Citation/Method
 
@@ -24,9 +25,14 @@ Browaeys, R.; Saelens, W.; Saeys, Y. NicheNet: Modeling Intercellular Communicat
 
 Love, M.I., Huber, W., Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2 Genome Biology 15(12):550 (2014)
 
-**Scanpy**: cluster and visualize cell types using marker genes
+**Scanpy**: cluster and visualize cell types using marker genes, identify differentially expressed genes 
 
 Wolf, F., Angerer, P. & Theis, F. SCANPY: large-scale single-cell gene expression data analysis. Genome Biol 19, 15 (2018). https://doi.org/10.1186/s13059-017-1382-0
+
+**scikit-learn**: clustering cell types and subtypes
+
+Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
+
 
 ## Data
 
@@ -44,10 +50,10 @@ Emont, M. P.; Jacobs, C.; Essene, A. L.; Pant, D.; Tenen, D.; Colleluori, G.; Di
 
 We have subfolders in this repo
 
-- data: the raw data of single cell RNAseq of human and mouse white adipose tissue
-- code: source files for producing the figure
-  - scRNA-seq data: folder with human WAT scRNA-seq data, metadata, features, and barcodes
-- figure: the final figures
+- data: the raw data of single-cell RNAseq of human and mouse white adipose tissue
+  - scRNA_HWAT: subfolder with human WAT scRNA-seq UMAP results, metadata, features, and barcodes. The Matrix file referenced in 'A Single-Cell Atlas of Human and Mouse White Adipose Tissue' was locally stored due to its considerable size and the uploading constraints of GitHub. However, it is openly accessible via the provided link.
+- code: source files for producing the results and figures
+- figure: the final figures included in the submission 
 - raw: Intermediate data files produced by the scripts. These files are not git committed.
 
 ## Installation
@@ -70,3 +76,23 @@ Packages: Relevant codes are in **code/NicheNet_VAMs.Rmd**
 > install.packages("DESeq2")
 > 
 > install.packages("EnhancedVolcano")
+
+### NicheNet Analysis
+
+Python version 3.11.5
+
+Jupyter Notebook version 7.1.3
+
+Packages: Relevant codes are in **code/scRNA_cluster_DGE.ipynb**
+
+import pandas
+
+import sklearn.cluster
+
+import scanpy
+
+import matplotlib.pyplot
+
+import numpy
+
+import os
