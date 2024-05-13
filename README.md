@@ -77,22 +77,22 @@ Packages: Relevant codes are in **code/NicheNet_VAMs.Rmd**
 > 
 > install.packages("EnhancedVolcano")
 
-### NicheNet Analysis
+### scRNA-seq Analysis
 
-> Python version 3.11.5
->
-> Jupyter Notebook version 7.1.3
->
-> Packages: Relevant codes are in **code/scRNA_cluster_DGE.ipynb**
->
+Python version 3.11.5
+
+ Jupyter Notebook version 7.1.3
+
+ Packages: Relevant codes are in **code/scRNA_cluster_DGE.ipynb**
+
 > import pandas
 > 
 > import sklearn.cluster
 > 
 > import scanpy
-
-import matplotlib.pyplot
-
-import numpy
-
-import os
+>
+> import matplotlib.pyplot
+> 
+> import numpy
+> 
+> import os
