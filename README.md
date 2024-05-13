@@ -50,11 +50,11 @@ Emont, M. P.; Jacobs, C.; Essene, A. L.; Pant, D.; Tenen, D.; Colleluori, G.; Di
 
 We have subfolders in this repo
 
-- data: the raw data of single-cell RNAseq of human and mouse white adipose tissue
-  - scRNA_HWAT: subfolder with human WAT scRNA-seq UMAP results, metadata, features, and barcodes. The Matrix file referenced in 'A Single-Cell Atlas of Human and Mouse White Adipose Tissue' was locally stored due to its considerable size and the uploading constraints of GitHub. However, it is openly accessible via the provided link.
-- code: source files for producing the results and figures
-- figure: the final figures included in the submission 
-- raw: Intermediate data files produced by the scripts. These files are not git committed.
+- **data/**: the raw data of single-cell RNAseq of human and mouse white adipose tissue
+  - **scRNA_HWAT/**: subfolder with human WAT scRNA-seq UMAP results, metadata, features, and barcodes. The Matrix file referenced in 'A Single-Cell Atlas of Human and Mouse White Adipose Tissue' was locally stored due to its considerable size and the uploading constraints of GitHub. However, it is openly accessible via the provided link.
+- **code/**: source files for producing the results and figures
+- **figures/**: the final figures included in the submission 
+- **raw/**: Intermediate data files produced by the scripts. These files are not git committed.
 
 ## Installation
 
