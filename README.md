@@ -7,7 +7,7 @@ Members: Jia Zhao; Adriana Payan-Medina
 
 The repo contains the code and data to reproduce all figures and results for the group project of 20.440 Analysis of Biological Network (MIT)
 
-Resident tissue macrophages (RTMs) are present ubiquitously in every tissue and organ, yet how they support tissue and organ function is largely unknown. Since intercellular communication is critical for tissue homeostasis, the goal is to use computational methods to unveil cell-cell communication between fat RTMs and other cell types to decode complex cellular circuits and infer novel functions of RTMs in adipogenesis. The use of scRNA-seq analysis was also conducted to validate and investigate adipose RTM function. 
+Resident tissue macrophages (RTMs) are present ubiquitously in every tissue and organ, yet how they contribute to cell-cell communication is largely unknown. As intercellular communication is critical for tissue homeostasis, our goal is to use computational methods to unveil cell-cell communication between fat RTMs and adipocytes/adipocyte progenitors to decode complex cellular circuits and infer novel functions of RTMs in adipogenesis. The use of scRNA-seq analysis was also conducted to validate and investigate adipose RTM function. 
 
 ## Citation/Method
 
@@ -54,7 +54,7 @@ We have folders and subfolders in this repo:
   - **scRNA_HWAT/**: subfolder with human WAT scRNA-seq UMAP results, metadata, features, and barcodes. The Matrix file referenced in 'A Single-Cell Atlas of Human and Mouse White Adipose Tissue' was locally stored due to its considerable size and the uploading constraints of GitHub. However, it is openly accessible via the provided link.
 - **code/**: source files for producing the results and figures
 - **figures/**: the final figures included in the submission 
-- **raw/**: Intermediate data files produced by the scripts. These files are not git committed.
+- **presentation_slides/**: Final presentation slides.
 
 ## Installation
 
